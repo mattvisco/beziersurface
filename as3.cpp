@@ -83,7 +83,6 @@ float angleX = 0.0, angleY = 0, transX = 0, transY = 0;
 float lx=0.0f,lz=-1.0f;
 // XZ position of the camera
 float x=0.0f,z=11.0f;
-GLfloat light_position[4] = {0,0,1,0}, light_ambient[4] = {0.0, 0.0, 0.0, 1.0}, light_diffuse[4] = {1.0, 1.0, 1.0, 1.0}, light_specular[4] = {1.0, 1.0, 1.0, 1.0};
 float mcolor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 float specReflection[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 
@@ -100,13 +99,6 @@ void initScene(){
     // Enable lighting and the light we have set up
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    //glEnable(GL_COLOR_MATERIAL);
-    
-    // Set lighting parameters
-    glLightfv(GL_LIGHT0,GL_POSITION,light_position);
-    glLightfv(GL_LIGHT0, GL_AMBIENT,light_ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
     
     // Set shading type
     glShadeModel(GL_SMOOTH); // maybe move into bez function -- should change based on keystrokes
@@ -455,7 +447,6 @@ int main(int argc, char *argv[]) {
     string str(argv[1]);
     parseFile(str);
   
-    
     //This initializes glut
     glutInit(&argc, argv);
     
@@ -472,8 +463,6 @@ int main(int argc, char *argv[]) {
     glutCreateWindow(argv[0]);
     
     initScene();							// quick function to set up scene
-    
-   
     
     glutDisplayFunc(myDisplay);				// function to run when its time to draw something
     glutReshapeFunc(myReshape);				// function to run when the window gets resized
