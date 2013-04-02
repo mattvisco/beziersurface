@@ -205,8 +205,8 @@ void subdividepatch(Patch patch, int step) {
             
             //evaluate surface
             bezpatchinterp(patch, iu, iv, &point, normal);
-
-             //glNormal3f(norm[i].x,norm[i].y,norm[i].z); //DECIDE WHAT TO DO WITH NORMAL
+            
+            //glNormal3f(norm[i].x,norm[i].y,norm[i].z); //DECIDE WHAT TO DO WITH NORMAL
 
             points[u][v]=point;
             v++;
@@ -259,6 +259,7 @@ void myDisplay(void) {
     gluLookAt(x, 1.0f, z, x+lx, 1.0f,  z+lz, 0.0f, 1.0f,  0.0f);
 
     bezStep=16; // Set this in main
+    glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT,(.2,.2,.2,1));
     
     //iterate through all the patches and render each patch individually
     for (int i = 0; i < patches.size(); i++) {
