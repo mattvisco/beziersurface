@@ -93,19 +93,14 @@ float specReflection[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 //****************************************************
 void initScene(){
     glClearColor (0.0, 0.0, 0.0, 0.0);
-    //glClearDepth(1.0);
-    
-    
+
+    glClearDepth(1.0f);                         // Depth Buffer Setup
+    glEnable(GL_DEPTH_TEST);                        // Enables Depth Testing
+
     // Enable lighting and the light we have set up
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    glEnable(GL_DEPTH_TEST);
-    
-    // Enable lighting and the light we have set up
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_COLOR_MATERIAL);
+    //glEnable(GL_COLOR_MATERIAL);
     
     // Set lighting parameters
     glLightfv(GL_LIGHT0,GL_POSITION,light_position);
@@ -138,6 +133,7 @@ void myReshape(int w, int h) {
     
 	// Set the correct perspective.
 	gluPerspective(45,ratio,1,100);
+    
     
 	// Get Back to the Modelview
 	glMatrixMode(GL_MODELVIEW);
@@ -199,6 +195,8 @@ void bezpatchinterp(Patch patch, float u, float v, vec3* point, vec3& normal) {
     //evaluate surface and derivative for u and v
     bezcurveinterp(vcurve, v, point, dPdv);
     bezcurveinterp(ucurve, u, point, dPdu);
+    
+    normal=normalize(cross(dPdu,dPdv));
 
 }
 
@@ -233,8 +231,7 @@ void subdividepatch(Patch patch, int step) {
             //evaluate surface
             bezpatchinterp(patch, iu, iv, &point, normal);
 
-             //glNormal3f(norm[i].x,norm[i].y,norm[i].z); //DECIDE WHAT TO DO WITH NORMAL
-
+            // saves points and normals to be rendered after interpolation
             points[u][v]=point;
             normals[u][v]=normal;
             v++;
@@ -266,23 +263,24 @@ void subdividepatch(Patch patch, int step) {
     glBegin(GL_TRIANGLES);
     for (int k = 0; k < step; k++) {
         for (int r = 0; r < step; r++) {
-            glVertex3f(points[k][r].x,points[k][r].y,points[k][r].z);
             glNormal3f(normals[k][r].x,normals[k][r].y,normals[k][r].z);
+            glVertex3f(points[k][r].x,points[k][r].y,points[k][r].z);
             
-            glVertex3f(points[k+1][r].x,points[k+1][r].y,points[k+1][r].z);
             glNormal3f(normals[k+1][r].x,normals[k+1][r].y,normals[k+1][r].z);
-            
-            glVertex3f(points[k][r+1].x,points[k][r+1].y,points[k][r+1].z);
-            glNormal3f(normals[k][r+1].x,normals[k][r+1].y,normals[k][r+1].z);
-            
             glVertex3f(points[k+1][r].x,points[k+1][r].y,points[k+1][r].z);
-            glNormal3f(normals[k+1][r].x,normals[k+1][r].y,normals[k+1][r].z);
             
-            glVertex3f(points[k][r+1].x,points[k][r+1].y,points[k][r+1].z);
             glNormal3f(normals[k][r+1].x,normals[k][r+1].y,normals[k][r+1].z);
+            glVertex3f(points[k][r+1].x,points[k][r+1].y,points[k][r+1].z);
+           
             
-            glVertex3f(points[k+1][r+1].x,points[k+1][r+1].y,points[k+1][r+1].z);
+            glNormal3f(normals[k+1][r].x,normals[k+1][r].y,normals[k+1][r].z);
+            glVertex3f(points[k+1][r].x,points[k+1][r].y,points[k+1][r].z);
+            
+            glNormal3f(normals[k][r+1].x,normals[k][r+1].y,normals[k][r+1].z);
+            glVertex3f(points[k][r+1].x,points[k][r+1].y,points[k][r+1].z);
+            
             glNormal3f(normals[k+1][r+1].x,normals[k+1][r+1].y,normals[k+1][r+1].z);
+            glVertex3f(points[k+1][r+1].x,points[k+1][r+1].y,points[k+1][r+1].z);
         }
     }
     glEnd();
@@ -299,22 +297,6 @@ void myDisplay(void) {
     glLoadIdentity ();     // make sure transformation is "zero'd"
     
     gluLookAt(x, 1.0f, z, x+lx, 1.0f,  z+lz, 0.0f, 1.0f,  0.0f);
-
-    /*
-    // Enable lighting and the light we have set up
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_COLOR_MATERIAL);
-    
-    // Set lighting parameters
-    glLightfv(GL_LIGHT0,GL_POSITION,light_position);
-    glLightfv(GL_LIGHT0, GL_AMBIENT,light_ambient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-    
-    // Set shading type
-    glShadeModel(GL_SMOOTH); // maybe move into bez function -- should change based on keystrokes*/
     
     // Sets the material properties of the teapot
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mcolor);
@@ -478,7 +460,7 @@ int main(int argc, char *argv[]) {
     glutInit(&argc, argv);
     
     //This tells glut to use a double-buffered window with red, green, and blue channels
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     
     // Initalize theviewport size
     viewport.w = 400;
@@ -500,10 +482,6 @@ int main(int argc, char *argv[]) {
     //Reads in keystrokes to either change view angle or exit
     glutKeyboardFunc(processNormalKeys); //Currently errors
 	glutSpecialFunc(processSpecialKeys);
-
-    
-    // OpenGL init
-	glEnable(GL_DEPTH_TEST);
     
     glutMainLoop();	// infinite loop that will keep drawing and resizing
     
