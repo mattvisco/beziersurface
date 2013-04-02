@@ -83,16 +83,39 @@ float angleX = 0.0, angleY = 0, transX = 0, transY = 0;
 float lx=0.0f,lz=-1.0f;
 // XZ position of the camera
 float x=0.0f,z=11.0f;
-
+GLfloat light_position[4] = {0,0,1,0}, light_ambient[4] = {0.0, 0.0, 0.0, 1.0}, light_diffuse[4] = {1.0, 1.0, 1.0, 1.0}, light_specular[4] = {1.0, 1.0, 1.0, 1.0};
+float mcolor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+float specReflection[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 
 
 //****************************************************
 // Simple init function
 //****************************************************
 void initScene(){
-    //glClearColor (0.0, 0.0, 0.0, 0.0);
+    glClearColor (0.0, 0.0, 0.0, 0.0);
     //glClearDepth(1.0);
-    //glShadeModel (GL_SMOOTH); //CHANGE THIS
+    
+    
+    // Enable lighting and the light we have set up
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_DEPTH_TEST);
+    
+    // Enable lighting and the light we have set up
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
+    
+    // Set lighting parameters
+    glLightfv(GL_LIGHT0,GL_POSITION,light_position);
+    glLightfv(GL_LIGHT0, GL_AMBIENT,light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    
+    // Set shading type
+    glShadeModel(GL_SMOOTH); // maybe move into bez function -- should change based on keystrokes
+
 }
 
 
@@ -191,11 +214,15 @@ void subdividepatch(Patch patch, int step) {
     float iu,iv;
     int u = 0,v = 0;
     vector<vector<vec3 > > points;
+    vector<vector<vec3 > > normals;
+    
     points.resize(step+1);
+    normals.resize(step+1);
     for(int s = 0; s < step+1; ++s)
     {
         //Grow Columns by step
         points[s].resize(step+1);
+        normals[s].resize(step+1);
     }
     
     //for each parametric value of iu
@@ -209,10 +236,12 @@ void subdividepatch(Patch patch, int step) {
              //glNormal3f(norm[i].x,norm[i].y,norm[i].z); //DECIDE WHAT TO DO WITH NORMAL
 
             points[u][v]=point;
+            normals[u][v]=normal;
             v++;
         }
         bezpatchinterp(patch, 1, iv, &point, normal);
         points[u][v]=point;
+        normals[u][v]=normal;
         //newV=v;
         v=0;
         u++;
@@ -222,25 +251,38 @@ void subdividepatch(Patch patch, int step) {
         //evaluate surface
         bezpatchinterp(patch, iu, 1, &point, normal);
         points[u][v]=point;
+        normals[u][v]=normal;
         v++;
     }
     bezpatchinterp(patch, 1, 1, &point, normal);
     points[u][v]=point;
+    normals[u][v]=normal;
     
     // Renders the patch using the points calculated via interpolation
     glPushMatrix();
     glTranslatef(transX, transY, 0);
     glRotatef(angleX, 1, 0, 0);
     glRotatef(angleY, 0, 1, 0);
-    glBegin(GL_LINES);
+    glBegin(GL_TRIANGLES);
     for (int k = 0; k < step; k++) {
         for (int r = 0; r < step; r++) {
             glVertex3f(points[k][r].x,points[k][r].y,points[k][r].z);
+            glNormal3f(normals[k][r].x,normals[k][r].y,normals[k][r].z);
+            
             glVertex3f(points[k+1][r].x,points[k+1][r].y,points[k+1][r].z);
+            glNormal3f(normals[k+1][r].x,normals[k+1][r].y,normals[k+1][r].z);
+            
             glVertex3f(points[k][r+1].x,points[k][r+1].y,points[k][r+1].z);
+            glNormal3f(normals[k][r+1].x,normals[k][r+1].y,normals[k][r+1].z);
+            
             glVertex3f(points[k+1][r].x,points[k+1][r].y,points[k+1][r].z);
+            glNormal3f(normals[k+1][r].x,normals[k+1][r].y,normals[k+1][r].z);
+            
             glVertex3f(points[k][r+1].x,points[k][r+1].y,points[k][r+1].z);
+            glNormal3f(normals[k][r+1].x,normals[k][r+1].y,normals[k][r+1].z);
+            
             glVertex3f(points[k+1][r+1].x,points[k+1][r+1].y,points[k+1][r+1].z);
+            glNormal3f(normals[k+1][r+1].x,normals[k+1][r+1].y,normals[k+1][r+1].z);
         }
     }
     glEnd();
@@ -258,6 +300,27 @@ void myDisplay(void) {
     
     gluLookAt(x, 1.0f, z, x+lx, 1.0f,  z+lz, 0.0f, 1.0f,  0.0f);
 
+    /*
+    // Enable lighting and the light we have set up
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
+    
+    // Set lighting parameters
+    glLightfv(GL_LIGHT0,GL_POSITION,light_position);
+    glLightfv(GL_LIGHT0, GL_AMBIENT,light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    
+    // Set shading type
+    glShadeModel(GL_SMOOTH); // maybe move into bez function -- should change based on keystrokes*/
+    
+    // Sets the material properties of the teapot
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mcolor);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specReflection);
+    glMateriali(GL_FRONT, GL_SHININESS, 96);
+    
     bezStep=16; // Set this in main
     
     //iterate through all the patches and render each patch individually
@@ -426,7 +489,7 @@ int main(int argc, char *argv[]) {
     glutInitWindowPosition(0,0);
     glutCreateWindow(argv[0]);
     
-    //initScene();							// quick function to set up scene
+    initScene();							// quick function to set up scene
     
    
     
