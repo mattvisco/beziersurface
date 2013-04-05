@@ -2,7 +2,7 @@
 //  as3.cpp
 //
 //
-//  Created by Matthew Visco on 3/19/13.
+//  Created by Matthew Visco/Thomas Yopes on 3/19/13.
 //
 //
 
@@ -89,7 +89,7 @@ float lx=0.0f,lz=-1.0f;
 float x=0.0f,z=11.0f;
 GLfloat light_position[4] = {0,0,-1,0}, light_ambient[4] = {0.0, 0.0, 0.0, 1.0}, light_diffuse[4] = {1.0, 1.0, 1.0, 1.0}, light_specular[4] = {1.0, 1.0, 1.0, 1.0};
 float mcolor[] = { 1.0f, 0.5f, 0.0f, 1.0f };
-float zcolor[]= { 0.0f, 1.0f, 0.0f, 1.0f };
+//float zcolor[]= { 0.0f, 1.0f, 0.0f, 1.0f };
 float specReflection[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 
 
@@ -112,7 +112,6 @@ void initScene(){
     glLightfv(GL_LIGHT1, GL_AMBIENT,light_ambient);
     glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
     glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular);
-
 }
 
 
@@ -135,6 +134,7 @@ void myReshape(int w, int h) {
     
 	// Set the correct perspective.
 	gluPerspective(45,ratio,1,100);
+    
     
 	// Get Back to the Modelview
 	glMatrixMode(GL_MODELVIEW);
@@ -216,7 +216,7 @@ void adaptiveTes(vec3 firstpoint, vec3 secondpoint, vec3 thirdpoint, vec3 firstn
     float diff3=sqrt(sqr(point3.x-midpoint3.x)+sqr(point3.y-midpoint3.y)+sqr(point3.z-midpoint3.z));
     
     // case when all sides are close enough
-    if ((sqrt(sqr(point1.x-midpoint1.x)+sqr(point1.y-midpoint1.y)+sqr(point1.z-midpoint1.z))<tolerance && sqrt(sqr(point2.x-midpoint2.x)+sqr(point2.y-midpoint2.y)+sqr(point2.z-midpoint2.z))<tolerance && sqrt(sqr(point3.x-midpoint3.x)+sqr(point3.y-midpoint3.y)+sqr(point3.z-midpoint3.z))<tolerance) || recursion==0){
+    if ((diff1<tolerance && diff2<tolerance && diff3<tolerance) || recursion==0){
         if (lines){
             glNormal3f(firstnormal.x, firstnormal.y, firstnormal.z);
             glVertex3f(firstpoint.x, firstpoint.y, firstpoint.z);
@@ -356,7 +356,7 @@ void subdividepatch(Patch patch, int step) {
                 
                 glNormal3f(normals[k][r].x,normals[k][r].y,normals[k][r].z);
                 glVertex3f(points[k][r].x,points[k][r].y,points[k][r].z);
-                //if (!lines){
+                if (!lines){
                     //TOP TRIANGLE
                     glNormal3f(normals[k+1][r+1].x,normals[k+1][r+1].y,normals[k+1][r+1].z);
                     glVertex3f(points[k+1][r+1].x,points[k+1][r+1].y,points[k+1][r+1].z);
@@ -367,10 +367,10 @@ void subdividepatch(Patch patch, int step) {
                 
                     glNormal3f(normals[k][r].x,normals[k][r].y,normals[k][r].z);
                     glVertex3f(points[k][r].x,points[k][r].y,points[k][r].z);
-                //} else {
-                    //glNormal3f(normals[k+1][r].x,normals[k+1][r].y,normals[k+1][r].z);
-                    //glVertex3f(points[k+1][r].x,points[k+1][r].y,points[k+1][r].z);
-                //}
+                } else {
+                    glNormal3f(normals[k+1][r].x,normals[k+1][r].y,normals[k+1][r].z);
+                    glVertex3f(points[k+1][r].x,points[k+1][r].y,points[k+1][r].z);
+                }
                 
             } else {
                 adaptiveTes(points[k][r],points[k+1][r],points[k+1][r+1],  normals[k][r], normals[k+1][r], normals[k+1][r+1], r*numdiv, k*numdiv, r*numdiv, (k+1)*numdiv,(r+1)*numdiv, (k+1)*numdiv, patch, 400);
@@ -571,7 +571,6 @@ int main(int argc, char *argv[]) {
     }
     tolerance=atof(argv[2]);
   
-    
     //This initializes glut
     glutInit(&argc, argv);
     
@@ -589,8 +588,6 @@ int main(int argc, char *argv[]) {
     
     initScene();							// quick function to set up scene
     
-   
-    
     glutDisplayFunc(myDisplay);				// function to run when its time to draw something
     glutReshapeFunc(myReshape);				// function to run when the window gets resized
     glutIdleFunc(myDisplay);
@@ -598,10 +595,6 @@ int main(int argc, char *argv[]) {
     //Reads in keystrokes to either change view angle or exit
     glutKeyboardFunc(processNormalKeys);
 	glutSpecialFunc(processSpecialKeys);
-
-    
-    // OpenGL init
-	glEnable(GL_DEPTH_TEST);
     
     glutMainLoop();	// infinite loop that will keep drawing and resizing
     
